@@ -59,5 +59,44 @@ namespace MVCTestingSample.Controllers.Tests
                 }
             };
         }
+
+        [TestMethod]
+        public void Add_ReturnsAViewResult()
+        {
+            Mock<IProductRepository> mockRepo = new Mock<IProductRepository>();
+            ProductsController controller = new ProductsController(mockRepo.Object);
+
+            var result = controller.Add();
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+        }
+
+        [TestMethod]
+        public async Task AddPost_ReturnsARedirectAndAddsProduct_WhenModelStateIsValid()
+        {
+            var mockRepo = new Mock<IProductRepository>();
+            mockRepo.Setup(repo => repo.AddProductAsync(It.IsAny<Product>()))
+                .Returns(Task.CompletedTask);
+
+            var controller = new ProductsController(mockRepo.Object);
+            Product p = new Product()
+            {
+                Name = "Test",
+                Price = "5.99"
+            };
+            var result = await controller.Add(p);
+
+            // Ensure user is redirected after sucessfully adding a product
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+
+            // Ensure Controller name is not specified in the RedirectToAction
+            var redirectResult = result as RedirectToActionResult;
+            Assert.IsNull(redirectResult.ControllerName, "Controller name should not be specified in the redirect");
+
+            // Ensure the Redirect is to the Index Action
+            Assert.AreEqual("Index", redirectResult.ActionName);
+
+            mockRepo.Verify();
+        }
     }
 }
