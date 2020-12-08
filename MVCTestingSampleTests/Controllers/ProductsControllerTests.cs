@@ -107,10 +107,13 @@ namespace MVCTestingSample.Controllers.Tests
             var controller = new ProductsController(mockRepo.Object);
             var invalidProduct = new Product()
             {
-                Name = null, // Name is required to be valid
+                Name = string.Empty, // Name is required to be valid
                 Price = "9.99",
                 ProductId = 1
             };
+
+            // Mark ModelState as Invalid
+            controller.ModelState.AddModelError("Name", "Required");
 
             // Ensure View is returned
             IActionResult result = await controller.Add(invalidProduct);
@@ -119,6 +122,10 @@ namespace MVCTestingSample.Controllers.Tests
             // Ensure modelbound to product
             ViewResult viewResult = result as ViewResult;
             Assert.IsInstanceOfType(viewResult.Model, typeof(Product));
+
+            // Ensure Invalid Product is passed back to view
+            Product modelBoundProduct = viewResult.Model as Product;
+            Assert.AreEqual(modelBoundProduct, invalidProduct, "Invalid Prodict should be passed back to View");
         }
     }
 }
