@@ -112,6 +112,9 @@ namespace MVCTestingSample.Controllers.Tests
                 ProductId = 1
             };
 
+            // Mark ModelState as Invalid
+            controller.ModelState.AddModelError("Name", "Required");
+
             // Ensure View is returned
             IActionResult result = await controller.Add(invalidProduct);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -119,6 +122,10 @@ namespace MVCTestingSample.Controllers.Tests
             // Ensure modelbound to product
             ViewResult viewResult = result as ViewResult;
             Assert.IsInstanceOfType(viewResult.Model, typeof(Product));
+
+            // Ensure Invalid Product is passed back to view
+            Product modelBoundProduct = viewResult.Model as Product;
+            Assert.AreEqual(modelBoundProduct, invalidProduct, "Invalid Prodict should be passed back to View");
         }
     }
 }
