@@ -76,7 +76,8 @@ namespace MVCTestingSample.Controllers.Tests
         {
             var mockRepo = new Mock<IProductRepository>();
             mockRepo.Setup(repo => repo.AddProductAsync(It.IsAny<Product>()))
-                .Returns(Task.CompletedTask);
+                .Returns(Task.CompletedTask)
+                .Verifiable();
 
             var controller = new ProductsController(mockRepo.Object);
             Product p = new Product()
@@ -97,6 +98,27 @@ namespace MVCTestingSample.Controllers.Tests
             Assert.AreEqual("Index", redirectResult.ActionName);
 
             mockRepo.Verify();
+        }
+
+        [TestMethod]
+        public async Task AddPost_ReturnsViewWithModel_WhenModelStateIsInvalid()
+        {
+            var mockRepo = new Mock<IProductRepository>();
+            var controller = new ProductsController(mockRepo.Object);
+            var invalidProduct = new Product()
+            {
+                Name = null, // Name is required to be valid
+                Price = "9.99",
+                ProductId = 1
+            };
+
+            // Ensure View is returned
+            IActionResult result = await controller.Add(invalidProduct);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+
+            // Ensure modelbound to product
+            ViewResult viewResult = result as ViewResult;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(Product));
         }
     }
 }
